@@ -1,0 +1,125 @@
+# Motor-enabled Unitree Go2 description (the friction_inertia motor model).
+# The motor_parameters below are system-identified joint-side values measured
+# on the FR leg and mirrored to all four legs.
+schema: 1
+name: go2_motor
+urdf: ../assets/go2.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]
+
+joint_order:
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz,
+   FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint]
+
+actuated_joints:
+  [FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint]
+
+contacts:
+  - {frame: FL_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: FR_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: RL_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: RR_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+
+monitor_frames:
+  [FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint,
+   FL_foot, FR_foot, RL_foot, RR_foot]
+
+# Capsule collision model, used by the obstacle-avoidance constraint
+# (`obstacles:` in a problem yaml) and drawn by the render overlay. A capsule is
+# a frame plus two local endpoints and a radius; `to_frame` is the shorthand
+# "the ORIGIN of that frame", which must be body-fixed in `frame` (checked at
+# load time) and keeps limb lengths coming from the URDF instead of literals.
+collision_capsules:
+  - {name: trunk,    frame: base, a: [-0.128, 0.0, 0.0], b: [0.128, 0.0, 0.0], radius: 0.060}
+  - {name: FL_hip,   frame: FL_hip_joint,   to_frame: FL_thigh_joint, radius: 0.045}
+  - {name: FL_thigh, frame: FL_thigh_joint, to_frame: FL_calf_joint,  radius: 0.035}
+  - {name: FL_calf,  frame: FL_calf_joint,  to_frame: FL_foot,        radius: 0.028}
+  - {name: FR_hip,   frame: FR_hip_joint,   to_frame: FR_thigh_joint, radius: 0.045}
+  - {name: FR_thigh, frame: FR_thigh_joint, to_frame: FR_calf_joint,  radius: 0.035}
+  - {name: FR_calf,  frame: FR_calf_joint,  to_frame: FR_foot,        radius: 0.028}
+  - {name: RL_hip,   frame: RL_hip_joint,   to_frame: RL_thigh_joint, radius: 0.045}
+  - {name: RL_thigh, frame: RL_thigh_joint, to_frame: RL_calf_joint,  radius: 0.035}
+  - {name: RL_calf,  frame: RL_calf_joint,  to_frame: RL_foot,        radius: 0.028}
+  - {name: RR_hip,   frame: RR_hip_joint,   to_frame: RR_thigh_joint, radius: 0.045}
+  - {name: RR_thigh, frame: RR_thigh_joint, to_frame: RR_calf_joint,  radius: 0.035}
+  - {name: RR_calf,  frame: RR_calf_joint,  to_frame: RR_foot,        radius: 0.028}
+
+actuation:
+  # H(q)qdd + C(q,qd) + F(qd,qdd) = B u + J^T lambda, with u the
+  # delivered pre-loss motor torque. Arrays follow actuated_joints order.
+  motor_model: friction_inertia
+  motor_parameters:
+    # Joint-side values: N*m, N*m*s/rad, kg*m^2, and N*m respectively.
+    # Each array has nu = 12 entries in `actuated_joints` order, i.e. leg by
+    # leg FL, FR, RL, RR and within a leg hip, thigh, calf:
+    #   [FL_hip, FL_thigh, FL_calf,  FR_hip, FR_thigh, FR_calf,
+    #    RL_hip, RL_thigh, RL_calf,  RR_hip, RR_thigh, RR_calf]
+    # (so the line breaks below group two legs per row, not one). A single
+    # scalar may be given instead and is broadcast to all 12 joints.
+    # System-identified on the FR leg (hip / thigh / calf) and applied
+    # unchanged to all four legs. The calf values carry the drivetrain: its
+    # dry friction is ~10x the hip's and its reflected inertia ~6x, because
+    # the identification lumps the knee linkage into the joint-side model.
+    coulomb: [0.1461, 0.1217, 1.4840, 0.1461, 0.1217, 1.4840,
+              0.1461, 0.1217, 1.4840, 0.1461, 0.1217, 1.4840]
+    viscous: [0.0282, 0.0407, 0.0282, 0.0282, 0.0407, 0.0282,
+              0.0282, 0.0407, 0.0282, 0.0282, 0.0407, 0.0282]
+    armature: [0.0030, 0.0036, 0.0185, 0.0030, 0.0036, 0.0185,
+               0.0030, 0.0036, 0.0185, 0.0030, 0.0036, 0.0185]
+    bias: [0.0, 0.0, -0.1124, 0.0, 0.0, -0.1124,
+           0.0, 0.0, -0.1124, 0.0, 0.0, -0.1124]
+    # Optimizer only: sign(v) ~= v/sqrt(v^2 + eps^2). Simulation uses
+    # MuJoCo's exact-sign native dry friction and stiction at zero speed.
+    # A 2 rad/s band keeps repeated zero-velocity crossings resolvable by the
+    # degree-8 spectral transcription. Simulation still uses native stiction.
+    velocity_smoothing: 2.0
+
+  # The optimizer keeps the node-only input box instead of adding joint-velocity
+  # or torque-speed constraints.
+  saturation:
+    enabled: true
+    enforce_in_optimization: false
+    effort_scale: 1.0
+    speed_derating: true
+    knee_fraction: 0.6
+
+  # Explicit and modular. The first-order internal torque state is simulated;
+  # this initial implementation does not add that state to the OCP.
+  lag:
+    enabled: true
+    time_constant: 0.004
+
+  effort_limits: from_urdf
+  velocity_limits: from_urdf
+
+  # Backward-compatible parameter sets for explicit --motor overrides.
+  motors:
+    ideal: {}
+    saturating: {derate: true, knee_frac: 0.6}
+    lag: {t_lag: 0.004, derate: true, knee_frac: 0.6}
+
+sim:
+  foot_radius: 0.005
+  friction: 1.0
+  restitution: 0.0
+  timestep: 5.0e-4
+  solref: [0.002, 1.0]
+  solimp: [0.95, 0.99, 0.001, 0.5, 2.0]
+  # Render-only geometry: the URDF's .dae visuals are unreadable by MuJoCo, so
+  # the real Go2 meshes come from this donor model (MuJoCo Menagerie, vendored
+  # by scripts/fetch_go2_menagerie_meshes.sh). Grafted onto same-named bodies as
+  # non-colliding geoms; dynamics untouched. Drop the key to render the URDF's
+  # collision primitives instead.
+  visual_mesh_xml: ../assets/go2_menagerie/go2.xml

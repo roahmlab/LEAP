@@ -1,0 +1,280 @@
+{
+  "_provenance": "ported from refactored_codebase_v1/plotting_paper_code/style.json",
+  "methods": {
+    "leap": {
+      "label": "LEAP",
+      "color_name": "blue",
+      "rgba": [
+        0.0,
+        0.45,
+        0.7,
+        1.0
+      ]
+    }
+  },
+  "states": {
+    "initial": {
+      "label": "Initial state",
+      "rgba": [
+        0.35,
+        0.35,
+        0.4,
+        0.32
+      ]
+    },
+    "goal": {
+      "label": "Desired final state",
+      "rgba": [
+        0.0,
+        0.62,
+        0.45,
+        0.32
+      ]
+    }
+  },
+  "video": {
+    "width": 960,
+    "height": 540
+  },
+  "camera": {
+    "fovy": 45,
+    "minimum_distance": 1.0
+  },
+  "scene": {
+    "floor_rgba": [
+      0.58,
+      0.61,
+      0.65,
+      1.0
+    ],
+    "fence_rgba": [
+      0.85,
+      0.12,
+      0.12,
+      1.0
+    ],
+    "background": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "shadowsize": 2048,
+    "znear": 0.005,
+    "lights": [
+      {
+        "pos": [
+          1,
+          -2,
+          3
+        ],
+        "dir": [
+          -0.3,
+          0.6,
+          -1
+        ],
+        "diffuse": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "ambient": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "shadow": true
+      },
+      {
+        "pos": [
+          -1,
+          2,
+          3
+        ],
+        "dir": [
+          0.3,
+          -0.6,
+          -1
+        ],
+        "diffuse": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "ambient": [
+          0,
+          0,
+          0
+        ],
+        "shadow": false
+      }
+    ],
+    "visual_assets": "assets"
+  },
+  "text": {
+    "font": "assets/fonts/DejaVuSans.ttf",
+    "foreground": [
+      30,
+      35,
+      43
+    ]
+  },
+  "robots": {
+    "hopper2d": "Hopper2D",
+    "go2": "Go2",
+    "h1": "H1",
+    "g1_29dof": "G1 (29 DoF)",
+    "talos": "Talos"
+  },
+  "tracking_overlay": {
+    "benchmark": "fence",
+    "data_root": null,
+    "archive_dir": null,
+    "archive_tag": null
+  },
+  "tracking_timelapse": {
+    "motion_color_role": "leap",
+    "motion_alpha": 0.38,
+    "endpoint_alpha": 1.0,
+    "azimuth": 90.0,
+    "elevation": 0.0,
+    "orthographic": true,
+    "render_size": 2048,
+    "camera_margin": 2.0,
+    "crop_padding_fraction": 0.018,
+    "crop_padding_min_px": 8,
+    "render_shadows": true,
+    "font_size": 34,
+    "time_font_size": 26,
+    "title_height": 64,
+    "time_row_height": 52,
+    "legend_height": 64,
+    "legend_font_size": 26,
+    "swatch_size": 24,
+    "label_gap": 12,
+    "legend_gap": 36,
+    "combined_gutter": 18,
+    "dpi": 300,
+    "background": [
+      255,
+      255,
+      255
+    ],
+    "motion_label": "LEAP tracking",
+    "initial_label": "Initial pose",
+    "final_label": "Final tracked pose",
+    "obstacle_label": "Fence",
+    "combined_name": "leap_fence_tracking_timelapse",
+    "combined_width_px": 2400,
+    "combined_rows": [
+      [
+        "go2"
+      ],
+      [
+        "hopper2d",
+        "h1",
+        "g1_29dof",
+        "talos"
+      ]
+    ],
+    "combined_row_gap": 18,
+    "minimum_crop_occupancy": 0.9,
+    "pdf_jpeg_quality": 95,
+    "pdf_subsampling": 0,
+    "variants": {
+      "side_dense_gradient": {
+        "color_mode": "time_gradient",
+        "motion_alpha": 0.24,
+        "time_label_columns": 6,
+        "gradient_bar_width": 480,
+        "gradient_bar_height": 24,
+        "gradient_legend_height": 140,
+        "gradient_legend_padding": 16,
+        "gradient_label": "Time: initial → final",
+        "gradient_initial_label": "0%",
+        "gradient_final_label": "100%",
+        "azimuth": 90.0,
+        "elevation": -12.0,
+        "combined_rows": [
+          [
+            "go2"
+          ],
+          [
+            "hopper2d",
+            "h1",
+            "g1_29dof",
+            "talos"
+          ]
+        ],
+        "fence_sampling_profile": "dense"
+      },
+      "isometric_dense_gradient": {
+        "color_mode": "time_gradient",
+        "motion_alpha": 0.24,
+        "time_label_columns": 6,
+        "gradient_bar_width": 480,
+        "gradient_bar_height": 24,
+        "gradient_legend_height": 140,
+        "gradient_legend_padding": 16,
+        "gradient_label": "Time: initial → final",
+        "gradient_initial_label": "0%",
+        "gradient_final_label": "100%",
+        "azimuth": 135.0,
+        "elevation": -35.26438968,
+        "combined_rows": [
+          [
+            "hopper2d",
+            "go2"
+          ],
+          [
+            "h1",
+            "g1_29dof",
+            "talos"
+          ]
+        ],
+        "fence_sampling_profile": "dense"
+      }
+    },
+    "fence_sampling": {
+      "density_by_robot": {
+        "hopper2d": 1.0,
+        "go2": 1.0,
+        "h1": 1.0,
+        "g1_29dof": 1.0,
+        "talos": 0.5
+      },
+      "default_density": 1.0,
+      "profiles": {
+        "side": {
+          "flight_fractions": [
+            0.25,
+            0.5,
+            0.75
+          ]
+        },
+        "dense": {
+          "stance_fractions": [
+            0.15,
+            0.5,
+            0.85
+          ],
+          "flight_fractions": [
+            0.25,
+            0.5,
+            0.75
+          ],
+          "landing_fractions": [
+            0.15,
+            0.5,
+            0.85
+          ]
+        }
+      }
+    },
+    "floor_surface": {
+      "padding_m": 0.12,
+      "reflectance": 0.22,
+      "specular": 0.35,
+      "shininess": 0.45
+    }
+  }
+}

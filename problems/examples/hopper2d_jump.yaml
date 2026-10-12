@@ -1,0 +1,46 @@
+# The planar hopper jumping in place, posed as a generic contact sequence (problem type
+# contact_sequence): the same problem as the C++ tutorial example examples/hopper_jump.cpp,
+# written as a yaml. Three modes: push-off stance -> flight -> landing stance, rest to
+# rest, the foot leaving and landing on the same spot.
+#
+#   OMP_NUM_THREADS=12 build/leap_solve problems/examples/hopper2d_jump.yaml output.stem=results/hopper2d_jump
+#   python python/report_solution.py results/hopper2d_jump.h5 --out results/hopper2d_jump_report
+#
+# Every key is documented in docs/yaml_reference.md ("problem: for type: contact_sequence").
+schema: 1
+name: hopper2d_jump
+robot: ../../robots/hopper2d.yaml
+
+problem:
+  type: contact_sequence
+  modes:                       # the prescribed contact sequence (Problem 1 of the paper)
+    - {label: push_off, contacts: [foot], T: 0.8}
+    - {label: flight,   contacts: [],     T: 0.391}   # tair >= 2 sqrt(2 g hop) / g = 0.372 s for hop 0.17
+    - {label: landing,  contacts: [foot], T: 0.8}     # the foot lands where it took off (no `shift`, no `feet`)
+  pose_start:                  # the rest pose at t = 0 (joint angles; the base is derived from the feet)
+    - {joint: hip,  angle: -0.4982}
+    - {joint: knee, angle: 0.9}
+  pose_end:                    # the rest pose at t = T
+    - {joint: hip,  angle: -0.2202}
+    - {joint: knee, angle: 0.4}
+  hop: 0.17                    # minimum liftoff vertical speed sqrt(2 g hop) before the flight
+  footclear: 0.03              # the foot clears the floor by this much mid-flight
+  mu: 0.85                     # friction coefficient
+  lammin: 5.0                  # normal-force floor in stance (N)
+  landvz: 0.5                  # touchdown speed cap (m/s)
+  attmax: 0.5                  # |pitch| <= 0.5 rad
+  ubern: true                  # torque box certified between the nodes (Bernstein coefficients)
+  planarlock: [base_py, base_rx, base_rz]   # a sagittal robot described by a 3-D URDF
+  noslipnq: 3                  # off-node no-slip points per stance element
+
+solver:                        # the transcription (the benchmark's fence choice)
+  deg: 4                       # polynomial degree per element
+  nc: 4                        # force control points per stance element
+  split: 6                     # elements per mode, graded 0.6 toward the contact changes
+  hgrade: 0.6
+  lsqnq: 6                     # least-squares dynamics-defect points per element
+  rho: 3.0e6                   # the defect weight and the unit of every penalty (12 kg hopper)
+
+output:
+  stem: results/hopper2d_jump
+  finegrid_dt: 0.01

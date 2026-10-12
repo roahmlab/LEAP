@@ -1,0 +1,42 @@
+# The Go2 quadruped taking one step with its front-left foot (0.15 m forward) on flat
+# ground, posed as a generic contact sequence (problem type contact_sequence): a partial
+# support (three feet) between two four-foot stances, rest to rest. The end pose is left
+# free (no pose_end): the robot ends at rest with every foot on its placement.
+#
+#   OMP_NUM_THREADS=12 build/leap_solve problems/examples/go2_step.yaml output.stem=results/go2_step
+schema: 1
+name: go2_step
+robot: ../../robots/go2.yaml
+
+problem:
+  type: contact_sequence
+  modes:
+    - {label: stand,   contacts: [FL_foot, FR_foot, RL_foot, RR_foot], T: 0.4}
+    - {label: swing,   contacts: [FR_foot, RL_foot, RR_foot],          T: 0.4}
+    - {label: support, contacts: [FL_foot, FR_foot, RL_foot, RR_foot], T: 0.4, shift: [0.15, 0.0, 0.0]}
+  pose_start:
+    - {joint: FL_thigh_joint, angle: 0.78}
+    - {joint: FL_calf_joint,  angle: -1.57}
+    - {joint: FR_thigh_joint, angle: 0.78}
+    - {joint: FR_calf_joint,  angle: -1.57}
+    - {joint: RL_thigh_joint, angle: 0.78}
+    - {joint: RL_calf_joint,  angle: -1.57}
+    - {joint: RR_thigh_joint, angle: 0.78}
+    - {joint: RR_calf_joint,  angle: -1.57}
+  footclear: 0.04              # the swing foot clears the floor by 4 cm mid-swing
+  mu: 0.8
+  lammin: 5.0
+  landvz: 0.5
+  attmax: 0.5
+
+solver:
+  deg: 4
+  nc: 4
+  split: 4
+  hgrade: 0.6
+  lsqnq: 6
+  rho: 3.0e6
+
+output:
+  stem: results/go2_step
+  finegrid_dt: 0.01

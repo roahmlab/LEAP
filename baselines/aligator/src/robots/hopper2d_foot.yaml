@@ -1,0 +1,51 @@
+# Sagittal-plane one-legged hopper WITH A FLAT FOOT, nu = 3 (hip, knee, ankle).
+# hopper2d (robots/hopper2d.yaml) plus an ankle pitch joint and a 5 x 5 cm box
+# sole, so the single contact is a dim-6 WRENCH (force + moment) instead of a
+# point force: the foot can carry a moment, which the MuJoCo tracking of the
+# terrain walk needs. URDF: assets/hopper2d_foot.urdf (the source of truth for
+# masses/inertias; this file holds the optimizer's contact/collision tables).
+#
+# Planarity is a PROBLEM constraint, not a model one: the problem yaml pins
+# (base_py, base_rx, base_rz) = 0 at every node (`planarlock`).
+#
+# There is no `sim:` block: the MuJoCo tracking builder reads `contacts` and
+# builds the sole box itself (foot_box grown by its sole margin).
+schema: 1
+name: hopper2d_foot
+urdf: ../assets/hopper2d_foot.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]   # z-up world
+
+joint_order:                 # hard check of the URDF parse (q layout)
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz, hip, knee, ankle]
+
+actuated_joints: [hip, knee, ankle]  # -> nu = 3
+
+# Flat foot: dim 6 = world (fx, fy, fz) + moment (tx, ty, tz) about the contact
+# frame. `foot` is the CENTRE of the sole's bottom face, +z = sole normal, so
+# the flat-sole rows pin its orientation to identity in stance and the CoP box
+# is the sole rectangle: half-extents below (0.05 x 0.05 m sole). The problem's
+# `copx`/`copy` may be tighter (they are: 0.02, a 20 % margin left to the
+# tracker on each side).
+contacts:
+  - {frame: foot, dim: 6, foot_box: {x: 0.025, y: 0.025}}
+
+# Ground keep-out points (position-only reads, one inequality row each): the
+# sole centre and its heel/toe extremes, plus the knee.
+monitor_frames: [foot, foot_heel, foot_toe, knee_point]
+
+# Capsule collision model, read by the obstacle / terrain keep-out rows and the
+# self-collision pairs. Same three capsules as hopper2d; the shank capsule's
+# lower cap now bottoms out at the ANKLE (the sole hangs 12 mm below it).
+collision_capsules:
+  - {name: torso, frame: torso, a: [0.0, 0.0, 0.02], b: [0.0, 0.0, 0.34], radius: 0.090}
+  - {name: thigh, frame: hip,   a: [0.0, 0.0, -0.02], b: [0.0, 0.0, -0.30], radius: 0.050}
+  - {name: shank, frame: knee,  a: [0.0, 0.0, -0.02], b: [0.0, 0.0, -0.28], radius: 0.040}
+
+actuation:
+  motor_model: none          # rigid actuators: no reflected inertia, no friction
+  effort_limits: from_urdf   # 120 N*m hip/knee, 40 N*m ankle
+  velocity_limits: from_urdf # 20 rad/s per joint

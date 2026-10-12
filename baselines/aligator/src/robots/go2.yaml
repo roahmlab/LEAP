@@ -1,0 +1,93 @@
+# Unitree Go2 robot description: the URDF, contact frames, actuated joints, gravity,
+# joint order, collision capsules and actuation model read by leap_solve (the `sim:`
+# block is accepted and ignored).
+schema: 1
+name: go2
+urdf: ../assets/go2.urdf   # relative to this file
+
+# Explicit six 1-DOF floating base (prismatic px,py,pz then revolute rx,ry,rz):
+# q is a vector space with nq == nv == 18. Pinocchio's quaternion free-flyer is
+# deliberately NOT used; a retargeted URDF must follow the same layout.
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]   # z-up world
+
+joint_order:                 # hard check of the URDF parse (q layout)
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz,
+   FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint]
+
+actuated_joints:             # B columns in this order -> nu = 12 (base unactuated)
+  [FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint]
+
+# Optimizer contact table (order fixes the lam layout). The optimizer treats
+# each foot as a POINT at the frame origin; `collision` records the URDF's
+# collision sphere for reference -- the simulator builds its own (smaller)
+# sphere from sim.foot_radius below.
+contacts:
+  - {frame: FL_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: FR_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: RL_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+  - {frame: RR_foot, dim: 3, collision: {type: sphere, radius: 0.022}}
+
+monitor_frames:              # ground keep-out points (position-only reads)
+  [FL_hip_joint, FL_thigh_joint, FL_calf_joint,
+   FR_hip_joint, FR_thigh_joint, FR_calf_joint,
+   RL_hip_joint, RL_thigh_joint, RL_calf_joint,
+   RR_hip_joint, RR_thigh_joint, RR_calf_joint,
+   FL_foot, FR_foot, RL_foot, RR_foot]
+
+# Capsule collision model, used by the obstacle-avoidance constraint
+# (`obstacles:` in a problem yaml) and drawn by the render overlay. A capsule is
+# a frame plus two local endpoints and a radius; `to_frame` is the shorthand
+# "the ORIGIN of that frame", which must be body-fixed in `frame` (checked at
+# load time) and keeps limb lengths coming from the URDF instead of literals.
+collision_capsules:
+  - {name: trunk,    frame: base, a: [-0.128, 0.0, 0.0], b: [0.128, 0.0, 0.0], radius: 0.060}
+  - {name: FL_hip,   frame: FL_hip_joint,   to_frame: FL_thigh_joint, radius: 0.045}
+  - {name: FL_thigh, frame: FL_thigh_joint, to_frame: FL_calf_joint,  radius: 0.035}
+  - {name: FL_calf,  frame: FL_calf_joint,  to_frame: FL_foot,        radius: 0.028}
+  - {name: FR_hip,   frame: FR_hip_joint,   to_frame: FR_thigh_joint, radius: 0.045}
+  - {name: FR_thigh, frame: FR_thigh_joint, to_frame: FR_calf_joint,  radius: 0.035}
+  - {name: FR_calf,  frame: FR_calf_joint,  to_frame: FR_foot,        radius: 0.028}
+  - {name: RL_hip,   frame: RL_hip_joint,   to_frame: RL_thigh_joint, radius: 0.045}
+  - {name: RL_thigh, frame: RL_thigh_joint, to_frame: RL_calf_joint,  radius: 0.035}
+  - {name: RL_calf,  frame: RL_calf_joint,  to_frame: RL_foot,        radius: 0.028}
+  - {name: RR_hip,   frame: RR_hip_joint,   to_frame: RR_thigh_joint, radius: 0.045}
+  - {name: RR_thigh, frame: RR_thigh_joint, to_frame: RR_calf_joint,  radius: 0.035}
+  - {name: RR_calf,  frame: RR_calf_joint,  to_frame: RR_foot,        radius: 0.028}
+
+actuation:
+  # Default actuator assumption: no physical motor loss model. u is
+  # delivered joint torque and the problem's optional `ulim` supplies its box.
+  # See go2_motor.yaml for shared friction/inertia, saturation, and lag.
+  motor_model: none
+  effort_limits: from_urdf   # go2: hip/thigh 23.7 N*m, calf 45.43 N*m
+  velocity_limits: from_urdf # go2: hip/thigh 30.1 rad/s, calf 15.70 rad/s
+  motors:                    # selectable simulator motor models
+    ideal: {}                                        # pass-through = optimizer assumption
+    saturating: {derate: true, knee_frac: 0.6}       # +/-tau_max box + torque-speed derating
+    lag: {t_lag: 0.004, derate: true, knee_frac: 0.6}  # first-order lag, then envelope
+
+sim:                         # consumed by the Python simulator only
+  foot_radius: 0.005         # sim collision sphere radius (m). The optimizer's foot
+                             # is a point at the frame, so the sim uses a small
+                             # sphere whose BOTTOM sits at the frame.
+  friction: 1.0              # sim ground friction; grip margin over the optimizer's
+                             # cone mu (a problem-YAML parameter, e.g. 0.7)
+  restitution: 0.0           # plastic impacts (matches the optimizer's reset map)
+  timestep: 5.0e-4           # <= 0.5 ms needed for stiff plastic contact + PD
+  solref: [0.002, 1.0]       # ~2 ms contact time-constant, dampratio 1 -> no bounce
+  solimp: [0.95, 0.99, 0.001, 0.5, 2.0]
+  # Render-only geometry: the URDF ships Unitree's visuals as .dae, which MuJoCo
+  # cannot read, so the real Go2 meshes come from this donor model (MuJoCo
+  # Menagerie's unitree_go2, vendored by scripts/fetch_go2_menagerie_meshes.sh).
+  # They are grafted onto same-named bodies as non-colliding geoms -- dynamics
+  # are untouched. Drop the key to render the URDF collision primitives instead.
+  visual_mesh_xml: ../assets/go2_menagerie/go2.xml

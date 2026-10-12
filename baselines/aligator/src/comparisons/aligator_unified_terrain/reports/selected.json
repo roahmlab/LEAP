@@ -1,0 +1,8 @@
+{
+  "hopper2d": "runs/hopper_refined",
+  "go2": "runs/go2_cold",
+  "h1": "runs/h1_acceleration_polish",
+  "g1_29dof": "runs/g1_quadratic",
+  "talos": "runs/talos_quadratic",
+  "apollo": "runs/apollo_cold"
+}

@@ -1,0 +1,39 @@
+{
+  "_provenance": "the entries of refactored_codebase_v1/plotting_paper_code/style.json that the tracking study and its figure read",
+  "methods": {
+    "leap": {"label": "LEAP", "color_name": "blue", "rgba": [0.0, 0.45, 0.7, 1.0]},
+    "aligator": {"label": "Aligator", "color_name": "orange", "rgba": [0.9, 0.62, 0.0, 1.0]},
+    "crocoddyl": {"label": "Crocoddyl", "color_name": "pink", "rgba": [0.8, 0.4, 0.65, 1.0]}
+  },
+  "matplotlib": {
+    "font.family": "DejaVu Sans", "font.size": 11, "axes.spines.top": false, "axes.spines.right": false,
+    "axes.grid": true, "grid.alpha": 0.2, "lines.linewidth": 2, "figure.dpi": 150, "savefig.dpi": 300,
+    "figure.facecolor": "white", "axes.facecolor": "white", "savefig.bbox": "tight"
+  },
+  "thresholds": {
+    "base_pos_err": {"tolerance": 0.05, "units": "m"},
+    "base_rot_err": {"tolerance": 0.1, "units": "rad"},
+    "joint_err_max": {"tolerance": 0.2, "units": "rad"},
+    "foot_err_max": {"tolerance": 0.04, "units": "m"},
+    "base_speed": {"tolerance": 0.1, "units": "m/s"},
+    "joint_speed_max": {"tolerance": 0.1, "units": "rad/s"}
+  },
+  "tasks": {
+    "terrain": {
+      "title": "Uneven terrain",
+      "robots": ["hopper2d_foot", "go2", "h1", "g1_29dof", "talos"],
+      "robot_labels": {"hopper2d_foot": "Hopper", "go2": "Go2", "h1": "H1", "g1_29dof": "G1", "talos": "Talos"},
+      "robot_joint_counts": {"hopper2d_foot": 3, "go2": 12, "h1": 19, "g1_29dof": 29, "talos": 32}
+    },
+    "fence": {
+      "title": "Fence jump",
+      "robots": ["hopper2d", "go2", "h1", "g1_29dof", "talos"],
+      "robot_labels": {"hopper2d": "Hopper", "go2": "Go2", "h1": "H1", "g1_29dof": "G1", "talos": "Talos"},
+      "robot_joint_counts": {"hopper2d": 2, "go2": 12, "h1": 19, "g1_29dof": 29, "talos": 32}
+    }
+  },
+  "paper_table3_leap": {
+    "terrain": {"hopper2d_foot": 0.12, "go2": 0.23, "h1": 0.028, "g1_29dof": 0.016, "talos": 0.13},
+    "fence": {"hopper2d": 0.89, "go2": 0.038, "h1": 0.37, "g1_29dof": 0.0014, "talos": 0.0023}
+  }
+}

@@ -1,0 +1,32 @@
+# The conda environment that builds and runs new_src:
+#
+#   conda env create -f environment.yml          # or: mamba env create -f environment.yml
+#   conda activate leap_build
+#   cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+#         -DCMAKE_PREFIX_PATH=$CONDA_PREFIX -DCMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/c++
+#   cmake --build build -j
+#
+# Newer versions build too, but pinocchio 3.x is required (the model layer uses its 3.x API and
+# the CppAD headers it ships with). The python packages serve python/leap_solve.py and
+# python/report_solution.py (the independent pinocchio re-evaluation of an archive).
+# MuJoCo and proxsuite, needed by tracking/ only, are listed in tracking/README.md.
+name: leap_build
+channels:
+  - conda-forge
+dependencies:
+  - cxx-compiler=2.0.0          # gcc 15 on linux
+  - cmake>=3.22
+  - ninja
+  - eigen>=3.4
+  - pinocchio=3.9.*
+  - cppad
+  - hdf5
+  - suitesparse                 # CHOLMOD (optional: without it the Eigen sparse Cholesky is used)
+  - libblas
+  - liblapack                   # LAPACK dense Cholesky (optional)
+  - python>=3.11
+  - numpy
+  - scipy
+  - h5py
+  - matplotlib
+  - pyyaml

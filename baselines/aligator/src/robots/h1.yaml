@@ -1,0 +1,93 @@
+# Unitree H1 humanoid, nu = 19 (5 per leg, torso yaw, 4 per arm).
+# URDF: assets/h1.urdf (upstream unitree_ros + an explicit 6-joint base + six sole
+# frames; see that file's header).
+#
+# dim-6 FLAT-FOOT WRENCH contacts. H1 has ONE ankle joint (pitch) -- no ankle
+# roll -- which does NOT stop it having a wrench contact: the sole is rigidly
+# attached, so it transmits roll moment through the contact whether or not a motor
+# spans that axis. What it does mean is that the sole must be levelled by the
+# pitch chain alone (ankle = -(hip_pitch + knee), inside [-0.87, 0.52]) and that
+# roll balance is passive.
+#
+# The foot itself is the tightest geometry in the benchmark: the URDF's ankle
+# collision box is 0.28 x 0.03 x 0.024 m -- a 3 CM WIDE BLADE. foot_box below is
+# that box, so the problem yaml's copy (lateral CoP half-width) can be at most
+# 0.015; the robot's lateral balance therefore comes from the 0.406 m stance
+# width, not from the feet.
+schema: 1
+name: h1
+urdf: ../assets/h1.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]
+
+joint_order:
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz,
+   left_hip_yaw_joint, left_hip_roll_joint, left_hip_pitch_joint,
+   left_knee_joint, left_ankle_joint,
+   right_hip_yaw_joint, right_hip_roll_joint, right_hip_pitch_joint,
+   right_knee_joint, right_ankle_joint,
+   torso_joint,
+   left_shoulder_pitch_joint, left_shoulder_roll_joint, left_shoulder_yaw_joint,
+   left_elbow_joint,
+   right_shoulder_pitch_joint, right_shoulder_roll_joint,
+   right_shoulder_yaw_joint, right_elbow_joint]
+
+actuated_joints:
+  [left_hip_yaw_joint, left_hip_roll_joint, left_hip_pitch_joint,
+   left_knee_joint, left_ankle_joint,
+   right_hip_yaw_joint, right_hip_roll_joint, right_hip_pitch_joint,
+   right_knee_joint, right_ankle_joint,
+   torso_joint,
+   left_shoulder_pitch_joint, left_shoulder_roll_joint, left_shoulder_yaw_joint,
+   left_elbow_joint,
+   right_shoulder_pitch_joint, right_shoulder_roll_joint,
+   right_shoulder_yaw_joint, right_elbow_joint]
+
+# lam = [fx, fy, fz, tx, ty, tz] per foot (force in world axes, torque about the
+# frame origin). foot_box = the GEOMETRIC CoP half-extents; the tighter
+# constraint knobs copx/copy live in the problem yaml.
+contacts:
+  - {frame: left_foot,  dim: 6, foot_box: {x: 0.14, y: 0.015}}
+  - {frame: right_foot, dim: 6, foot_box: {x: 0.14, y: 0.015}}
+
+monitor_frames:
+  [left_foot, left_heel, left_toe, right_foot, right_heel, right_toe,
+   left_knee_joint, right_knee_joint]
+
+# Torso + both legs + the soles + both arms: uarm spans shoulder-yaw -> elbow
+# (body-fixed offset), farm is the forearm cylinder of the URDF's elbow link
+# (local +x, extended to cover the hand). New capsules are APPENDED so existing
+# capsule indices are unchanged.
+collision_capsules:
+  - {name: torso, frame: pelvis, a: [0.0, 0.0, -0.05], b: [0.0, 0.0, 0.50], radius: 0.140}
+  - {name: left_thigh,  frame: left_hip_pitch_joint,  to_frame: left_knee_joint,   radius: 0.080}
+  - {name: left_shank,  frame: left_knee_joint,       to_frame: left_ankle_joint,  radius: 0.060}
+  - {name: left_sole,   frame: left_foot,  a: [-0.14, 0.0, 0.0], b: [0.14, 0.0, 0.0], radius: 0.030}
+  - {name: right_thigh, frame: right_hip_pitch_joint, to_frame: right_knee_joint,  radius: 0.080}
+  - {name: right_shank, frame: right_knee_joint,      to_frame: right_ankle_joint, radius: 0.060}
+  - {name: right_sole,  frame: right_foot, a: [-0.14, 0.0, 0.0], b: [0.14, 0.0, 0.0], radius: 0.030}
+  - {name: left_uarm,  frame: left_shoulder_yaw_joint,  to_frame: left_elbow_joint,  radius: 0.055}
+  - {name: left_farm,  frame: left_elbow_joint,  a: [0.0, 0.0, 0.0], b: [0.30, 0.0, 0.0], radius: 0.050}
+  - {name: right_uarm, frame: right_shoulder_yaw_joint, to_frame: right_elbow_joint, radius: 0.055}
+  - {name: right_farm, frame: right_elbow_joint, a: [0.0, 0.0, 0.0], b: [0.30, 0.0, 0.0], radius: 0.050}
+
+actuation:
+  motor_model: none
+  effort_limits: from_urdf   # hip 200, knee 300, ankle 40, shoulder 40, elbow 18
+  velocity_limits: from_urdf # hip 23, knee 14, ankle 9, arm 9/20 rad/s
+
+sim:                         # consumed by the Python renderer/simulator only
+  foot_box_half_height: 0.004  # box-foot half height; bottom face = sole plane
+  friction: 1.0
+  restitution: 0.0           # plastic impacts (matches the optimizer reset map)
+  timestep: 5.0e-4
+  camera: {distance: 4.0, azimuth: 90, elevation: -12}
+  # Render-only geometry: MuJoCo grafts the official H1 meshes from this donor
+  # MJCF onto same-named bodies (all 20 of them match this URDF's links exactly --
+  # both descend from Unitree's own description). Dynamics untouched.
+  # Fetch with scripts/fetch_fence_bench_meshes.sh h1; without it the renderer
+  # says so and falls back to the collision model.
+  visual_mesh_xml: ../assets/h1_menagerie/h1.xml

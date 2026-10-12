@@ -1,0 +1,83 @@
+# Unitree G1 humanoid, FULL 29 DOF (12 legs + 3 waist + 14 arms).
+# URDF: assets/g1_29dof.urdf.
+#
+# dim-6 flat-foot wrench contacts on the ankle_roll link's sole rectangle
+# (x in [-0.05, 0.12], y = +-0.03 from the four r = 0.005 URDF contact spheres);
+# the contact frame sits at the rectangle CENTRE so foot_box is symmetric.
+schema: 1
+name: g1_29dof
+urdf: ../assets/g1_29dof.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]
+
+joint_order:
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz,
+   left_hip_pitch_joint, left_hip_roll_joint, left_hip_yaw_joint,
+   left_knee_joint, left_ankle_pitch_joint, left_ankle_roll_joint,
+   right_hip_pitch_joint, right_hip_roll_joint, right_hip_yaw_joint,
+   right_knee_joint, right_ankle_pitch_joint, right_ankle_roll_joint,
+   waist_yaw_joint, waist_roll_joint, waist_pitch_joint,
+   left_shoulder_pitch_joint, left_shoulder_roll_joint, left_shoulder_yaw_joint,
+   left_elbow_joint, left_wrist_roll_joint, left_wrist_pitch_joint,
+   left_wrist_yaw_joint,
+   right_shoulder_pitch_joint, right_shoulder_roll_joint,
+   right_shoulder_yaw_joint, right_elbow_joint, right_wrist_roll_joint,
+   right_wrist_pitch_joint, right_wrist_yaw_joint]
+
+actuated_joints:
+  [left_hip_pitch_joint, left_hip_roll_joint, left_hip_yaw_joint,
+   left_knee_joint, left_ankle_pitch_joint, left_ankle_roll_joint,
+   right_hip_pitch_joint, right_hip_roll_joint, right_hip_yaw_joint,
+   right_knee_joint, right_ankle_pitch_joint, right_ankle_roll_joint,
+   waist_yaw_joint, waist_roll_joint, waist_pitch_joint,
+   left_shoulder_pitch_joint, left_shoulder_roll_joint, left_shoulder_yaw_joint,
+   left_elbow_joint, left_wrist_roll_joint, left_wrist_pitch_joint,
+   left_wrist_yaw_joint,
+   right_shoulder_pitch_joint, right_shoulder_roll_joint,
+   right_shoulder_yaw_joint, right_elbow_joint, right_wrist_roll_joint,
+   right_wrist_pitch_joint, right_wrist_yaw_joint]
+
+contacts:
+  - {frame: left_foot,  dim: 6, foot_box: {x: 0.085, y: 0.03}}
+  - {frame: right_foot, dim: 6, foot_box: {x: 0.085, y: 0.03}}
+
+monitor_frames:
+  [left_foot, left_heel, left_toe, right_foot, right_heel, right_toe,
+   left_knee_joint, right_knee_joint]
+
+# The seven leg/torso capsules of robots/g1.yaml (the 12-DOF model) retargeted
+# to this URDF's frames, PLUS both arms (arm rows need arm capsules). uarm
+# spans shoulder-yaw -> elbow (body-fixed offset); farm runs elbow -> rubber hand (local +x of the
+# elbow frame, wrist bends approximated rigid). New capsules are APPENDED so the
+# first seven indices are unchanged.
+collision_capsules:
+  - {name: torso, frame: pelvis, a: [0.0, 0.0, 0.0], b: [0.0, 0.0, 0.45], radius: 0.130}
+  - {name: left_thigh,  frame: left_hip_yaw_joint,  to_frame: left_knee_joint,         radius: 0.070}
+  - {name: left_shank,  frame: left_knee_joint,     to_frame: left_ankle_pitch_joint,  radius: 0.055}
+  - {name: left_sole,   frame: left_foot,  a: [-0.085, 0.0, 0.0], b: [0.085, 0.0, 0.0], radius: 0.030}
+  - {name: right_thigh, frame: right_hip_yaw_joint, to_frame: right_knee_joint,        radius: 0.070}
+  - {name: right_shank, frame: right_knee_joint,    to_frame: right_ankle_pitch_joint, radius: 0.055}
+  - {name: right_sole,  frame: right_foot, a: [-0.085, 0.0, 0.0], b: [0.085, 0.0, 0.0], radius: 0.030}
+  - {name: left_uarm,  frame: left_shoulder_yaw_joint,  to_frame: left_elbow_joint,  radius: 0.045}
+  - {name: left_farm,  frame: left_elbow_joint,  a: [0.0, 0.0, 0.0], b: [0.235, 0.005, -0.010], radius: 0.042}
+  - {name: right_uarm, frame: right_shoulder_yaw_joint, to_frame: right_elbow_joint, radius: 0.045}
+  - {name: right_farm, frame: right_elbow_joint, a: [0.0, 0.0, 0.0], b: [0.235, -0.005, -0.010], radius: 0.042}
+
+actuation:
+  motor_model: none
+  effort_limits: from_urdf   # hip 88, knee 139, ankle 35, arm 25, wrist 5
+  velocity_limits: from_urdf # hip 32, knee 20, ankle 30, arm 37, wrist 22 rad/s
+
+sim:                         # consumed by the Python renderer/simulator only
+  foot_box_half_height: 0.004
+  friction: 1.0
+  restitution: 0.0
+  timestep: 5.0e-4
+  camera: {distance: 3.2, azimuth: 90, elevation: -12}
+  # The SAME donor robots/g1.yaml uses (already vendored): 22 of its 24 bodies
+  # match this 29-DOF URDF's links; the two it does not are the 23-DOF model's
+  # fused rubber hands, which this model splits into wrist pitch/yaw links.
+  visual_mesh_xml: ../assets/g1_description/g1_23dof.xml

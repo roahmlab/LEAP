@@ -1,0 +1,15 @@
+# products of build.sh (compiled extensions, setuptools build trees, logs)
+*.so
+build/
+build_logs/
+__pycache__/
+# CasADi residual libraries, generated and compiled on first use of each robot
+src/comparisons/aligator_unified_fence/generated/
+src/comparisons/aligator_unified_terrain/generated/
+# seed archives restored by build.sh from the committed *.h5.gz copies
+*.h5
+# default output root of the drivers
+results/
+# terrain driver inputs
+!src/comparisons/aligator_unified_terrain/reports/selected.json
+!src/comparisons/aligator_unified_terrain/runs/*/result.json

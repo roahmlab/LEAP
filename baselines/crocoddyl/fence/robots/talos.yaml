@@ -1,0 +1,87 @@
+# PAL Robotics TALOS humanoid, nu = 32 (6 per leg, 2 torso, 7+1 per arm, 2 head).
+# URDF: assets/talos.urdf (upstream example-robot-data talos_full_v2 + explicit
+# 6-joint base + the twelve passive gripper joints welded + heel/toe frames; see
+# that file's header). 93.3 kg -- the heaviest robot in the benchmark.
+#
+# dim-6 flat-foot wrench contacts on the upstream left_sole_link / right_sole_link
+# frames (0.20 x 0.13 m sole).
+schema: 1
+name: talos
+urdf: ../assets/talos.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]
+
+joint_order:
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz,
+   leg_left_1_joint, leg_left_2_joint, leg_left_3_joint,
+   leg_left_4_joint, leg_left_5_joint, leg_left_6_joint,
+   leg_right_1_joint, leg_right_2_joint, leg_right_3_joint,
+   leg_right_4_joint, leg_right_5_joint, leg_right_6_joint,
+   torso_1_joint, torso_2_joint,
+   arm_left_1_joint, arm_left_2_joint, arm_left_3_joint, arm_left_4_joint,
+   arm_left_5_joint, arm_left_6_joint, arm_left_7_joint, gripper_left_joint,
+   arm_right_1_joint, arm_right_2_joint, arm_right_3_joint, arm_right_4_joint,
+   arm_right_5_joint, arm_right_6_joint, arm_right_7_joint, gripper_right_joint,
+   head_1_joint, head_2_joint]
+
+actuated_joints:
+  [leg_left_1_joint, leg_left_2_joint, leg_left_3_joint,
+   leg_left_4_joint, leg_left_5_joint, leg_left_6_joint,
+   leg_right_1_joint, leg_right_2_joint, leg_right_3_joint,
+   leg_right_4_joint, leg_right_5_joint, leg_right_6_joint,
+   torso_1_joint, torso_2_joint,
+   arm_left_1_joint, arm_left_2_joint, arm_left_3_joint, arm_left_4_joint,
+   arm_left_5_joint, arm_left_6_joint, arm_left_7_joint, gripper_left_joint,
+   arm_right_1_joint, arm_right_2_joint, arm_right_3_joint, arm_right_4_joint,
+   arm_right_5_joint, arm_right_6_joint, arm_right_7_joint, gripper_right_joint,
+   head_1_joint, head_2_joint]
+
+contacts:
+  - {frame: left_sole_link,  dim: 6, foot_box: {x: 0.10, y: 0.065}}
+  - {frame: right_sole_link, dim: 6, foot_box: {x: 0.10, y: 0.065}}
+
+monitor_frames:
+  [left_sole_link, left_heel, left_toe, right_sole_link, right_heel, right_toe,
+   leg_left_4_joint, leg_right_4_joint]
+
+# Talos ships mesh-only collision geometry, so these capsules are authored from
+# the joint frames: thigh = hip pitch -> knee (0.380 m), shank = knee -> ankle
+# (0.325 m), radii sized to the real link envelopes. The torso capsule does not
+# reach below the hips (it clears both thighs in the rest pose), and the arms and
+# grippers are covered: uarm = shoulder -> elbow, farm = elbow -> wrist, hand =
+# the gripper below the wrist force-torque frame. New capsules APPENDED so the
+# first seven indices hold.
+collision_capsules:
+  - {name: torso, frame: base_link, a: [0.0, 0.0, 0.07], b: [0.0, 0.0, 0.45], radius: 0.155}
+  - {name: left_thigh,  frame: leg_left_3_joint,  to_frame: leg_left_4_joint,  radius: 0.082}
+  - {name: left_shank,  frame: leg_left_4_joint,  to_frame: leg_left_5_joint,  radius: 0.075}
+  - {name: left_sole,   frame: left_sole_link,  a: [-0.10, 0.0, 0.0], b: [0.10, 0.0, 0.0], radius: 0.030}
+  - {name: right_thigh, frame: leg_right_3_joint, to_frame: leg_right_4_joint, radius: 0.082}
+  - {name: right_shank, frame: leg_right_4_joint, to_frame: leg_right_5_joint, radius: 0.075}
+  - {name: right_sole,  frame: right_sole_link, a: [-0.10, 0.0, 0.0], b: [0.10, 0.0, 0.0], radius: 0.030}
+  - {name: left_uarm,  frame: arm_left_3_joint,  to_frame: arm_left_4_joint,  radius: 0.065}
+  - {name: left_farm,  frame: arm_left_4_joint,  to_frame: arm_left_5_joint,  radius: 0.055}
+  - {name: left_hand,  frame: wrist_left_ft_link,  a: [0.0, 0.0, 0.02], b: [-0.03, 0.0, -0.17], radius: 0.045}
+  - {name: right_uarm, frame: arm_right_3_joint, to_frame: arm_right_4_joint, radius: 0.065}
+  - {name: right_farm, frame: arm_right_4_joint, to_frame: arm_right_5_joint, radius: 0.055}
+  - {name: right_hand, frame: wrist_right_ft_link, a: [0.0, 0.0, 0.02], b: [-0.03, 0.0, -0.17], radius: 0.045}
+
+actuation:
+  motor_model: none
+  effort_limits: from_urdf   # hip 100-160, knee 300, ankle 160/100 N*m
+  velocity_limits: from_urdf # hip 4-6, knee 7, ankle 5-6 rad/s -- the tightest
+                             # speed envelope in the benchmark
+
+sim:                         # consumed by the Python renderer/simulator only
+  foot_box_half_height: 0.004
+  friction: 1.0
+  restitution: 0.0
+  timestep: 5.0e-4
+  camera: {distance: 4.0, azimuth: 90, elevation: -12}
+  # Menagerie's PAL Talos, converted from the same PAL description as this URDF:
+  # all 45 donor bodies match its links. Fetch with
+  # scripts/fetch_fence_bench_meshes.sh talos.
+  visual_mesh_xml: ../assets/talos_menagerie/talos.xml

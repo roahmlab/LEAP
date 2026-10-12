@@ -1,0 +1,62 @@
+# The Go2 quadruped jumping 0.3 m forward on flat ground, posed as a generic contact
+# sequence (problem type contact_sequence): all four feet push off, a flight, all four
+# feet land 0.3 m ahead; rest to rest, with the self-collision rows of the benchmark.
+#
+#   OMP_NUM_THREADS=12 build/leap_solve problems/examples/go2_jump.yaml output.stem=results/go2_jump
+schema: 1
+name: go2_jump
+robot: ../../robots/go2.yaml
+
+problem:
+  type: contact_sequence
+  modes:
+    - {label: push_off, contacts: [FL_foot, FR_foot, RL_foot, RR_foot], T: 0.5}
+    - {label: flight,   contacts: [],                                   T: 0.4}
+    - {label: landing,  contacts: [FL_foot, FR_foot, RL_foot, RR_foot], T: 0.5, shift: [0.3, 0.0, 0.0]}
+  pose_start:                  # a crouch (the benchmark's squat)
+    - {joint: FL_thigh_joint, angle: 1.0}
+    - {joint: FL_calf_joint,  angle: -2.0}
+    - {joint: FR_thigh_joint, angle: 1.0}
+    - {joint: FR_calf_joint,  angle: -2.0}
+    - {joint: RL_thigh_joint, angle: 1.0}
+    - {joint: RL_calf_joint,  angle: -2.0}
+    - {joint: RR_thigh_joint, angle: 1.0}
+    - {joint: RR_calf_joint,  angle: -2.0}
+  pose_end:                    # the stand
+    - {joint: FL_thigh_joint, angle: 0.78}
+    - {joint: FL_calf_joint,  angle: -1.57}
+    - {joint: FR_thigh_joint, angle: 0.78}
+    - {joint: FR_calf_joint,  angle: -1.57}
+    - {joint: RL_thigh_joint, angle: 0.78}
+    - {joint: RL_calf_joint,  angle: -1.57}
+    - {joint: RR_thigh_joint, angle: 0.78}
+    - {joint: RR_calf_joint,  angle: -1.57}
+  hop: 0.15
+  footclear: 0.03
+  mu: 0.85
+  lammin: 5.0
+  landvz: 0.5
+  impactcone: true             # the plastic touchdown impulse inside the friction cone
+  attmax: 0.5
+  ubern: true
+  selfcolmargin: 0.02
+  selfcolinterp: 3
+  selfcolpairs:
+    - {a: FL_thigh, b: FR_thigh}
+    - {a: FL_calf,  b: FR_calf}
+    - {a: RL_thigh, b: RR_thigh}
+    - {a: RL_calf,  b: RR_calf}
+    - {a: FL_calf,  b: RL_thigh}
+    - {a: FR_calf,  b: RR_thigh}
+
+solver:
+  deg: 4
+  nc: 4
+  split: 6
+  hgrade: 0.6
+  lsqnq: 6
+  rho: 3.0e6
+
+output:
+  stem: results/go2_jump
+  finegrid_dt: 0.01

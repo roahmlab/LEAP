@@ -1,0 +1,9 @@
+build*/
+results/
+__pycache__/
+*.h5
+MUJOCO_LOG.TXT
+.venv*/
+!tracking/leaptrack/style.json
+!tracking/figure2/style.json
+*.log

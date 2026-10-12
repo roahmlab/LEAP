@@ -1,0 +1,49 @@
+# Sagittal-plane one-legged hopper, nu = 2 (hip, knee). URDF: assets/hopper2d.urdf
+# (the source of truth for masses/inertias; this file holds the optimizer's
+# contact/collision tables).
+#
+# The smallest robot of the fence benchmark and
+# the only one with a SINGLE contact: one point foot, so there is no support
+# polygon at all and both pinned rest poses have to balance the CoM over one
+# point. Planarity is a PROBLEM constraint, not a model one: the problem yaml
+# pins (base_py, base_rx, base_rz) = 0 at every node (`planarlock`).
+#
+# There is no `sim:` block: the MuJoCo tracking builder reads `contacts` directly.
+schema: 1
+name: hopper2d
+urdf: ../assets/hopper2d.urdf
+
+base:
+  type: floating_explicit_xyz_euler
+
+gravity: [0.0, 0.0, -9.81]   # z-up world
+
+joint_order:                 # hard check of the URDF parse (q layout)
+  [base_px, base_py, base_pz, base_rx, base_ry, base_rz, hip, knee]
+
+actuated_joints: [hip, knee]  # -> nu = 2
+
+# Point foot: dim 3 = world (fx, fy, fz). A point contact carries no moment, so
+# there is no CoP box and no yaw-torque bound -- those rows exist only for the
+# dim-6 flat-foot robots (h1/g1_29dof/apollo/talos).
+contacts:
+  - {frame: foot, dim: 3, collision: {type: sphere, radius: 0.04}}
+
+# Ground keep-out points (position-only reads, one inequality row each). The foot
+# is included: in stance its row is exactly tight (z = 0), in flight it is what
+# keeps the leg from swinging through the floor.
+monitor_frames: [foot, knee_point]
+
+# Capsule collision model, read ONLY by the obstacle (fence) constraint. Radii
+# match the URDF's collision cylinders; the shank capsule's lower cap bottoms out
+# exactly at the foot frame, so the contact point and the collision model agree
+# about where the ground is.
+collision_capsules:
+  - {name: torso, frame: torso, a: [0.0, 0.0, 0.02], b: [0.0, 0.0, 0.34], radius: 0.090}
+  - {name: thigh, frame: hip,   a: [0.0, 0.0, -0.02], b: [0.0, 0.0, -0.30], radius: 0.050}
+  - {name: shank, frame: knee,  a: [0.0, 0.0, -0.02], b: [0.0, 0.0, -0.28], radius: 0.040}
+
+actuation:
+  motor_model: none          # rigid actuators: no reflected inertia, no friction
+  effort_limits: from_urdf   # 120 N*m per joint
+  velocity_limits: from_urdf # 20 rad/s per joint

@@ -1,0 +1,183 @@
+# G1 (29 DOF) terrain walk: the uneven-terrain benchmark instance (docs/REPRODUCE.md section 2).
+# Solve it with scripts/run_benchmark.sh terrain g1_29dof <cpulist>; every transcription setting
+# of the benchmark is in this file, so `leap_solve <this file>` poses the same instance.
+schema: 1
+name: g1_29dof_terrain_walk_ap15_ank07w_cy020_att3_w25
+robot: ../robots/g1_29dof.yaml
+
+problem:
+  type: terrain_walk
+  tstart: 0.4463      # initial support, starts at rest (1.60 sqrt(h/g))
+  mu: 0.8
+  friceps: 1.0e-2
+  lammin: 3.445             # per-contact normal-force floor in stance: 2% of the
+                              # 344.5 N body weight over 2 contact(s), capped at 5 N
+  stancepin: true             # spot-pin every stance foot at every node
+  zeroland: true              # zero touchdown velocity: impulse-free impacts
+  landramp: true               # landed foot's force ramps from zero
+  approachfrac: 0.15          # level VERTICAL final approach: last 15 % of each swing
+                              # is its own mode (foot xy pinned on its target, sole
+                              # level, z >= target).
+  basevbox: [0, 0.45, 0.25]   # base linear-velocity box (vy, vz)
+  selfcolmargin: 0.015
+  selfcolinterp: 2
+  selfcolpairs:
+  - {a: left_farm, b: right_farm}
+  - {a: left_farm, b: left_thigh}
+  - {a: right_farm, b: right_thigh}
+  - {a: left_farm, b: right_thigh}
+  - {a: right_farm, b: left_thigh}
+  - {a: left_thigh, b: right_thigh}
+  - {a: left_shank, b: right_shank}
+  - {a: left_sole, b: right_sole}
+  - {a: left_shank, b: right_sole}
+  - {a: left_sole, b: right_shank}
+  - {a: left_thigh, b: right_shank}
+  - {a: left_shank, b: right_thigh}
+  - {a: torso, b: left_thigh}
+  - {a: torso, b: right_thigh}
+  wvel: 0.5                 # joint-motion (path length) objective weight:
+                              # + 1/2*wvel*(U0/V0)^2*||v_act||^2 per node; prices
+                              # the nullspace motion the effort cost cannot see
+  vboxnq: 2                   # off-node joint-speed box points (movable)
+  landvz: 0.5                 # touchdown-speed cap (used when zeroland: false)
+  attmax: 0.5                 # |base roll/pitch/yaw| <= 0.5 rad: stay upright
+  attbox: [0.3, 0.3, 0.25]  # per-axis attitude box
+  posture:                    # named joint boxes
+    - {joint: waist_yaw_joint, center: 0.0, band: 0.25}
+    - {joint: waist_roll_joint, center: 0.0, band: 0.25}
+    - {joint: waist_pitch_joint, center: 0.0, band: 0.25}
+  ulim: 0.985                   # torque box    = URDF effort limits
+  ulimjoint:                  # per-joint torque margin on top of ulim
+    - {joint: left_ankle_pitch_joint, scale: 0.7}
+    - {joint: left_ankle_roll_joint, scale: 0.7}
+    - {joint: right_ankle_pitch_joint, scale: 0.7}
+    - {joint: right_ankle_roll_joint, scale: 0.7}
+    - {joint: waist_roll_joint, scale: 0.8}
+    - {joint: waist_pitch_joint, scale: 0.8}
+  vlim: 1.0                   # joint-speed box = URDF velocity limits
+  qbox: 1.0                   # joint box     = URDF position limits
+  noslipnq: 3                 # off-node no-slip points per support phase
+  copx: 0.0850                # CoP box = the yaml's foot_box (0.170 x 0.060 m sole)
+  copy: 0.0200                # lateral CoP box 20 mm (from 30 = the FULL geometric
+                              # half-width)
+  gammaz: 0.05                # |tz| <= gammaz*fz (yaw friction)
+  nominal:                      # IK reference pose (NOT a constraint)
+    - {joint: left_ankle_pitch_joint, angle: -0.300000000}
+    - {joint: left_ankle_roll_joint, angle: +0.000000000}
+    - {joint: left_hip_pitch_joint, angle: -0.300000000}
+    - {joint: left_knee_joint, angle: +0.600000000}
+    - {joint: right_ankle_pitch_joint, angle: -0.300000000}
+    - {joint: right_ankle_roll_joint, angle: +0.000000000}
+    - {joint: right_hip_pitch_joint, angle: -0.300000000}
+    - {joint: right_knee_joint, angle: +0.600000000}
+  start:                        # initial placement of EVERY contact
+    - {contact: left_foot, pos: [+0.065226, +0.118506, 0.101065]}
+    - {contact: right_foot, pos: [-0.171265, -0.118506, 0.148271]}
+  steps:
+    - tswing: 0.5579          # step 1
+      tsupport: 0.3348
+      feet:
+        - {contact: left_foot, pos: [+0.484882, +0.118506, 0.138482], clearz: 0.045806}
+    - tswing: 0.5579          # step 2
+      tsupport: 0.3348
+      feet:
+        - {contact: right_foot, pos: [+0.240922, -0.118506, 0.137811], clearz: 0.045806}
+    - tswing: 0.5579          # step 3
+      tsupport: 0.3348
+      feet:
+        - {contact: left_foot, pos: [+0.878305, +0.118506, 0.093555], clearz: 0.045806}
+    - tswing: 0.5579          # step 4
+      tsupport: 0.3348
+      feet:
+        - {contact: right_foot, pos: [+0.662860, -0.118506, 0.122794], clearz: 0.045806}
+    - tswing: 0.5579          # step 5
+      tsupport: 0.3348
+      feet:
+        - {contact: left_foot, pos: [+1.312205, +0.118506, 0.169898], clearz: 0.045806}
+    - tswing: 0.5579          # step 6
+      tsupport: 0.3348
+      feet:
+        - {contact: right_foot, pos: [+1.113228, -0.118506, 0.168775], clearz: 0.045806}
+    - tswing: 0.5579          # step 7
+      tsupport: 0.3348
+      feet:
+        - {contact: left_foot, pos: [+1.703655, +0.118506, 0.118003], clearz: 0.045806}
+    - tswing: 0.5579          # step 8
+      tsupport: 0.3348
+      feet:
+        - {contact: right_foot, pos: [+1.494080, -0.118506, 0.092432], clearz: 0.045806}
+
+  attnq: 1   # movable off-node attitude-box point per element
+  qboxnq: 1   # movable off-node joint-box point per element
+  uboxnq: 2   # movable off-node torque-box points per element
+  noslipacc: true   # stance acceleration rows at the no-slip points
+  uhull: 16   # Bernstein-hull torque box, degree 16
+terrain:
+  margin: 0.02               # keep-out margin beyond each capsule radius
+  topslack: 0.0229            # a capsule may dip this far into a stone's top face
+  topinset: 0.0729            # the MINIMAL inset this robot's capsules need
+                              # (max_c dsafe_c - z_c = 0.0500 m, + the slack above)
+  interp: 6                   # MOVABLE off-node keep-out points per segment;
+                              # the relocation oracle chases the between-node maxima
+  windowpad: 0.0              # 0 = every stone on every mode (exact)
+  capsules: [left_thigh, left_shank, left_sole, right_thigh, right_shank, right_sole]
+  pillars:
+    - {name: s0_0, center: [-0.171265, -0.118506], size: [0.193870, 0.103198], top: 0.148271}
+    - {name: s0_1, center: [+0.240922, -0.118506], size: [0.202629, 0.087873], top: 0.137811}
+    - {name: s0_2, center: [+0.662860, -0.118506], size: [0.203022, 0.095466], top: 0.122794}
+    - {name: s0_3, center: [+1.113228, -0.118506], size: [0.193965, 0.098417], top: 0.168775}
+    - {name: s0_4, center: [+1.494080, -0.118506], size: [0.199790, 0.098367], top: 0.092432}
+    - {name: s1_0, center: [+0.065226, +0.118506], size: [0.201324, 0.105071], top: 0.101065}
+    - {name: s1_1, center: [+0.484882, +0.118506], size: [0.204616, 0.105758], top: 0.138482}
+    - {name: s1_2, center: [+0.878305, +0.118506], size: [0.213002, 0.089174], top: 0.093555}
+    - {name: s1_3, center: [+1.312205, +0.118506], size: [0.205651, 0.097553], top: 0.169898}
+    - {name: s1_4, center: [+1.703655, +0.118506], size: [0.199613, 0.096036], top: 0.118003}
+
+solver:                       # the shared v2 recipe; per-robot slots are marked
+  backend: cholmod_sn         # pattern/fallback backend; the solve itself is
+  blockdense: true            # the task-parallel dense per-segment Cholesky
+  lowtri: true
+  cscale: 1                   # unit-normalized penalties (metres vs Newtons)
+  mumax: 1.0e7
+  rhoabs: 3.0e8               # LS dynamics-defect weight, decoupled from mumax
+  elimu: true                 # inverse-dynamics torque elimination: u leaves the
+                              # decision vector, the dynamics rows shrink to the
+                              # floating-base rows, box_u reads the reconstructed
+                              # torque (the actuated between-node EoM defect is
+                              # then exactly zero)
+  elimuq: 2                   # off-node torque/envelope points per segment
+                              # (movable: the relocation rounds place them)
+  split: 1
+  lsqnq: 12                   # off-node LS dynamics-defect quadrature points
+  dsseg: 0.025                # window length (the production hopscotch value)
+  hmaxfar1: 2.85e-3           # phase-A h caps (the production hopscotch values)
+  hmaxnear1: 1.8e-3
+  hmaxnear: 1.9e-3            # phase-B near cap raised to the far cap
+  growgate: true              # ||F||-gated adaptive step growth
+  solveretry: 3               # shrink-and-retry on a failed linear solve
+  blowup: 10                  # window-level abort once the flow explodes
+  keepbesta: true             # phase A hands over its best iterate
+  smax1: 2.4                  # phase-A budget
+  stall: 12
+  gspike: 5.0                 # ||F||-spike h shrink (the hopscotch guard)
+  blowupretry: 2              # roll back and retry a blown window before aborting
+  smax2: 0.2
+  stopgate: 3.0e-3            # phase-B early stop on the zero-dual gate
+  stopinter: 2.0e-2           # ... and on the inter-node dynamics probe
+  restore: 0.5                # fixed-dual feasibility-restoration endgame
+  restoremu: 1.0e9
+  restoregate: 1.0e-3
+  restoreh: 2.5e-3            # restoration STARTS here ...
+  restorehmax: 0.05           # ... and may grow to here: the momentum-free
+                              # fixed-mu theta=1 step at large h approaches a
+                              # damped Gauss-Newton step
+  exchange: 6                 # relocation rounds: move the off-node rows onto
+  exsmax: 0.1                # the between-node violation maxima, re-polish,
+  exgate: 1.5e-3              # repeat until the unit-free dense scan is clean
+  fastgate: true
+output:
+  stem: results/sol_terrain_g1_29dof
+  archive: true
+  internode_trace: 64
+  finegrid_dt: 0.01   # the judge grid

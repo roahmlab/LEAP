@@ -1,0 +1,9 @@
+# conda environment, stock Crocoddyl build, native modules, generated residual libraries
+env/
+build/
+stage/
+*.so
+generated/
+__pycache__/
+# seed archives unpacked by setup.sh from the shipped *.h5.xz
+*.h5

@@ -1,0 +1,159 @@
+# Go2 fence jump: the fence-jump benchmark instance (docs/REPRODUCE.md section 2).
+# Solve it with scripts/run_benchmark.sh fence go2 <cpulist>; every transcription setting
+# of the benchmark is in this file, so `leap_solve <this file>` poses the same instance.
+schema: 1
+name: go2_jump_fence_sc
+robot: ../robots/go2.yaml
+problem:
+  liftofffull: true
+  ownership: true
+  strictrest: true
+  landfootpin: true
+  seedmode: 1
+  contactposall: true
+  type: jump_fence_v2
+  tstance: 0.5
+  tair: 0.487
+  hop: 0.264
+  step:
+  - 0.776
+  - 0.0
+  mu: 0.85
+  lammin: 5.0
+  landvz: 0.5
+  footclear: 0.0
+  attmax: 0.5
+  ulim: 1.0
+  selfcolmargin: 0.02
+  selfcolinterp: 3
+  selfcolpairs:
+  - {a: FL_thigh, b: FR_thigh}
+  - {a: FL_thigh, b: FR_calf}
+  - {a: FL_calf, b: FR_thigh}
+  - {a: FL_calf, b: FR_calf}
+  - {a: RL_thigh, b: RR_thigh}
+  - {a: RL_thigh, b: RR_calf}
+  - {a: RL_calf, b: RR_thigh}
+  - {a: RL_calf, b: RR_calf}
+  - {a: FL_thigh, b: RL_thigh}
+  - {a: FL_thigh, b: RL_calf}
+  - {a: FL_calf, b: RL_thigh}
+  - {a: FL_calf, b: RL_calf}
+  - {a: FR_thigh, b: RR_thigh}
+  - {a: FR_thigh, b: RR_calf}
+  - {a: FR_calf, b: RR_thigh}
+  - {a: FR_calf, b: RR_calf}
+  vlim: 1.0
+  qbox: 1.0
+  poses:
+  - joint: FL_thigh_joint
+    stand: 0.78
+    squat: 1.0
+  - joint: FL_calf_joint
+    stand: -1.57
+    squat: -2.0
+  - joint: FR_thigh_joint
+    stand: 0.78
+    squat: 1.0
+  - joint: FR_calf_joint
+    stand: -1.57
+    squat: -2.0
+  - joint: RL_thigh_joint
+    stand: 0.78
+    squat: 1.0
+  - joint: RL_calf_joint
+    stand: -1.57
+    squat: -2.0
+  - joint: RR_thigh_joint
+    stand: 0.78
+    squat: 1.0
+  - joint: RR_calf_joint
+    stand: -1.57
+    squat: -2.0
+  ubern: true
+  impactcone: true            # friction-cone admissibility of the
+                              # plastic touchdown impulse
+obstacles:
+  margin: 0.02
+  interp: 3
+  boxes:
+  - name: fence
+    center:
+    - 0.298
+    - 0.0
+    - 0.04
+    size:
+    - 0.04
+    - 0.8
+    - 0.08
+  smooth: 0   # exact separating-face certificate
+  rounded: true   # exact rounded capsule-box distance outside the box
+solver:
+  lsqnqs:
+  - 8
+  - 8
+  - 8
+  hnear: 20.0
+  deg: 4
+  nc: 4
+  lsqnq: 2
+  mumax: 3000000.0
+  hratchet: true
+  hclear: 0.0
+  hrho: 0.01
+  hfence: 6
+  hfmin: 0.05
+  hf0: 0.25
+  hgate: 0.005
+  hadapt: true
+  ratio: true
+  statgate: true
+  backend: cholmod_sn
+  split: 8   # elements per mode
+  ineqviol: true
+  lowtri: true
+  restart: true
+  growgate: true
+  solveretry: 3
+  blowup: 10.0
+  blowupretry: 3
+  keepbesta: true
+  stopgate: 2.0e-3
+  stopinter: 2.5e-3
+  hsteps: 0
+  hsmax: 30.0
+  feasmu: 1000000.0
+  feasscale: false
+  feas0: 0.001
+  smax0: 40.0
+  hmax0: 1.0
+  stall: 12
+  classic: true
+  classicpure: true
+  muc: -300000.0
+  smaxc: 240.0
+  kappa: 4.0
+  lsqmetric: 0
+  rho: 3000000.0   # LS dynamics-defect weight
+  hskip: 20.0
+  fastgate: true
+  sharejunction: 2
+  cplateau: true
+  hgrade: 0.6   # geometric grading of the stance elements
+  contsplit: 8
+  contfence: true
+  blockmetric: true
+  lagmetric: 8
+  lagwarm: 16
+  rescuefirst: true
+  stopsamp: 64
+  cband: 1.0
+  hcollapse: 4
+  csteps: 2000
+output:
+  stem: results/sol_fence_go2
+  archive: true
+  full_internode: false
+  internode_trace: 64
+  finegrid_dt: 0.01   # the judge grid
+  finegrid_dt2: 0.001   # a second, reported-only grid
